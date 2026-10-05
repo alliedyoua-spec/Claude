@@ -22,7 +22,8 @@ site/
   config.js      จำนวนข้อ คะแนน เวลาสอบ (แก้ได้โดยไม่แตะโค้ด)
   sets/<ชื่อ>.js แต่ละชุดเรียก registerSet({...}) โหลดด้วย <script>
   check.js       node site/check.js ตรวจโครงสร้างและคำนวณเฉลยซ้ำ (ใช้ field expr/checks)
-  bundle.js      node site/bundle.js รวมทุกอย่างเป็น site/exam.html ไฟล์เดียว
+  papers.js      แจกไพ่จากคลังโจทย์เป็นชุดสอบ 10 ชุด (seed คงที่)
+  build.js       node site/build.js → site/exam.html (ไฟล์เดียว) และ site/artifact.html (เผยแพร่เป็น Artifact)
 ```
 
 - ใช้ `<script>` ไม่ใช้ `fetch()` เพราะต้องเปิดจากไฟล์ในเครื่องได้

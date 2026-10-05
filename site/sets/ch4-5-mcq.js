@@ -4,7 +4,7 @@
   let n = 0;
   const mc = (q, ok, bad, p, why, note) => {
     const c = bad.slice(), pos = (++n) % (bad.length + 1); c.splice(pos, 0, ok);
-    return { id: n, type: 'mcq', q, choices: c, answer: pos, ref: 'สไลด์ หน้า ' + p, a: ok + (why ? '\n' + why : ''), note };
+    return { id: n, type: 'mcq', q, choices: c, answer: pos, ref: 'สไลด์ หน้า ' + p, a: ok + (why ? '\n' + why : ''), note, topic: parseInt(p) <= 52 ? 'การว่างงาน' : 'ปริมาณเงิน' };
   };
   const N = 'นอกสไลด์', Q = [];
   const add = (...a) => Q.push(mc(...a));
