@@ -758,8 +758,11 @@ registerSet({
     'gen-fx:5': ['อุปสงค์ของโลกต่อสินค้าเราเพิ่ม อุปสงค์ต่อเงินสกุลเราเพิ่มและอุปทานลดลง', '+'],
   };
   const fxTexts = Object.values(FXW).map(x => x[0]);
+  // ข้อที่ผู้ตรวจอิสระชี้ว่าผลสุทธิของห่วงโซ่ตีความได้มากกว่าหนึ่งแบบ: ติดป้ายให้ตรวจกับที่อาจารย์สอน
+  const NOTE = { 'fx-orig:1': 1, 'fx-orig:2': 1, 'fx-orig:3': 1, 'gen-fx:1': 1, 'chain-fx:4': 1, 'adas-orig:8': 1 };
   for (const s of window.SETS) for (const q of s.questions) {
     const g = q.graph; if (!g) continue;
+    if (NOTE[s.id + ':' + q.id] && !q.note) q.note = 'ผลสุทธิของห่วงโซ่ (ส่งออกสุทธิ/AD/ผลระยะสั้น-ยาว) ตีความได้มากกว่าหนึ่งแบบ เฉลยใช้ผลโดยตรงตามตารางสไลด์และปัจจัยอื่นคงที่ ควรตรวจกับที่อาจารย์สอน';
     if (g.type === 'adas' && !g.why) { const a = Math.sign(g.ad || 0), l = Math.sign(g.lras || 0), k = (a > 0 ? '+' : a < 0 ? '-' : '0') + (l > 0 ? '+' : l < 0 ? '-' : '0'); const w = a && l ? both : A[k]; if (w) g.why = { ok: w[0], bads: w[1] }; }
     if (g.type === 'fx') { const m = FXW[s.id + ':' + q.id]; if (m) { g.nx = g.nx || m[1]; if (!g.why) { const i = fxTexts.indexOf(m[0]); g.why = { ok: m[0], bads: [1, 3, 5].map(d => fxTexts[(i + d) % fxTexts.length]) }; } } }
   }
