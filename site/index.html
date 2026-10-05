@@ -23,6 +23,11 @@ input[type=text]{font:inherit;padding:4px 8px;width:9em}
 <body><main id="app"></main>
 <script src="config.js"></script>
 <script src="sets/exchange-rate.js"></script>
+<script src="sets/ad-as.js"></script>
+<script src="sets/fiscal-monetary.js"></script>
+<script src="sets/ch4-5-mcq.js"></script>
+<script src="sets/ch12-review.js"></script>
+<script src="sets/ch3-review.js"></script>
 <script>
 const $ = document.getElementById('app'), C = window.CONFIG, SETS = window.SETS;
 const mem = {};
@@ -45,7 +50,18 @@ function fxGraph(s) {
   ${t(54, 14, 'e (เงินตราตปท. ต่อเงินในประเทศ)')}${t(160, 218, 'ปริมาณเงินในประเทศ')}${t(150 + 5, 106, 'E₁')}${t(x2 + 5, y2 - 5, 'E₂')}
   ${t(252, 40, 'S', '#c0362c')}${t(252, 182, 'D', '#0b6bcb')}${t(sup ? 252 + dx : 252 + (dx > 0 ? dx : 0), sup ? 40 : 182, sup ? "S′" : "D′", sup ? '#c0362c' : '#0b6bcb')}</svg>`;
 }
-const graph = g => g ? { fx: fxGraph }[g.type](g.shift) : '';
+// กราฟ AD-AS: ad / lras = ระยะเลื่อนของ AD / LRAS (บวก=ขวา) ตามสไลด์: SRAS แนวนอน, LRAS แนวตั้ง
+function adasGraph({ ad = 0, lras = 0 }) {
+  const L = (x1, y1, x2, y2, c, d) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="2" ${d ? 'stroke-dasharray="5"' : ''}/>`;
+  const t = (x, y, v, c) => `<text x="${x}" y="${y}" fill="${c || 'currentColor'}" font-size="12">${v}</text>`, dot = (x, y, v) => `<circle cx="${x}" cy="${y}" r="3"/>` + t(x + 5, y - 5, v);
+  const A = o => L(60 + o, 40, 240 + o, 180, '#0b6bcb', o), eq = lras ? [150 + lras, 110 + .7 * (lras - ad)] : [150, 110 - .7 * ad];
+  const sras = y => L(60, y, 270, y, '#c0362c', y !== 110);
+  return `<svg viewBox="0 0 300 230" aria-label="กราฟ AD-AS">${L(50, 20, 50, 200, 'gray') + L(50, 200, 290, 200, 'gray')}
+  ${A(0)}${ad ? A(ad) : ''}${L(150, 30, 150, 200, '#18794e')}${lras ? L(150 + lras, 30, 150 + lras, 200, '#18794e', 1) : ''}${sras(110)}${lras || ad ? sras(Math.round(eq[1])) : ''}
+  ${t(54, 14, 'P (ระดับราคา)')}${t(180, 218, 'Y (ผลผลิตจริง)')}${t(236, 176, 'AD', '#0b6bcb')}${ad ? t(236 + ad, 176, 'AD′', '#0b6bcb') : ''}${t(152, 28, 'LRAS', '#18794e')}${lras ? t(152 + lras, 28, 'LRAS′', '#18794e') : ''}${t(250, 106, 'SRAS', '#c0362c')}
+  ${dot(150, 110, 'E₁')}${!lras && ad ? dot(150 + ad, 110, 'E₂') : ''}${dot(Math.round(eq[0]), Math.round(eq[1]), lras ? 'E₂' : 'E₃')}</svg>`;
+}
+const graph = g => g ? g.type === 'fx' ? fxGraph(g.shift) : adasGraph(g) : '';
 
 function home() {
   mode = 'practice'; clearInterval(timer);
@@ -67,8 +83,8 @@ function start(m, list, minutes) {
 }
 
 function mock() {
-  const mcq = shuffle(SETS.filter(s => s.exam).flatMap(s => s.questions.filter(q => q.type === 'mcq').map(q => ({ set: s, q })))).slice(0, C.mcqCount);
-  const written = Object.entries(C.writtenByTopic).flatMap(([t, n]) => shuffle(SETS.filter(s => s.exam && s.topic === t).flatMap(s => s.questions.filter(q => q.type === 'written').map(q => ({ set: s, q })))).slice(0, n));
+  const mcq = shuffle(SETS.filter(s => s.mcqPool).flatMap(s => s.questions.filter(q => q.type === 'mcq').map(q => ({ set: s, q })))).slice(0, C.mcqCount);
+  const written = Object.entries(C.writtenByTopic).flatMap(([t, n]) => shuffle(SETS.filter(s => s.exam).flatMap(s => s.questions.filter(q => q.type === 'written' && (q.topic || s.topic) === t).map(q => ({ set: s, q })))).slice(0, n));
   const extra = shuffle(SETS.filter(s => s.exam).flatMap(s => s.questions.filter(q => q.type === 'calc').map(q => ({ set: s, q }))));
   start('mock', [...mcq, ...extra, ...written], C.minutes);
 }
@@ -78,7 +94,7 @@ function card(it, n) {
   const input = q.type === 'mcq' ? q.choices.map((c, i) => `<label><input type="radio" name="r${n}" value="${i}"> ${c}</label>`).join('<br>')
     : q.type === 'calc' ? `<input type="text" id="t${n}" inputmode="decimal" placeholder="คำตอบ">` : '';
   const btn = mode === 'mock' ? '' : q.type === 'written' ? `<button data-act="show" data-n="${n}">ดูเฉลย</button>` : `<button data-act="check" data-n="${n}">ตรวจ</button>`;
-  return `<div class="card" id="c${n}"><small>${it.set.title} · ${q.ref || ''}</small>
+  return `<div class="card" id="c${n}"><small>${it.set.title} · ${q.ref || ''}</small>${q.note ? `<span class="tag" title="${q.note}">ตรวจเพิ่ม: ${q.note}</span>` : ''}
   <div class="q">${n + 1}. ${q.q}</div>${input}<div>${btn}</div><div id="f${n}"></div></div>`;
 }
 

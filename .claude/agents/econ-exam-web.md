@@ -21,6 +21,8 @@ site/
   index.html     เว็บไฟล์เดียว ไม่มี backend ไม่มี CDN/library ภายนอก
   config.js      จำนวนข้อ คะแนน เวลาสอบ (แก้ได้โดยไม่แตะโค้ด)
   sets/<ชื่อ>.js แต่ละชุดเรียก registerSet({...}) โหลดด้วย <script>
+  check.js       node site/check.js ตรวจโครงสร้างและคำนวณเฉลยซ้ำ (ใช้ field expr/checks)
+  bundle.js      node site/bundle.js รวมทุกอย่างเป็น site/exam.html ไฟล์เดียว
 ```
 
 - ใช้ `<script>` ไม่ใช้ `fetch()` เพราะต้องเปิดจากไฟล์ในเครื่องได้
