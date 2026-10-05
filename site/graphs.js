@@ -21,4 +21,20 @@
     ${P(150, 110, 'E₁')}${!lr && ad ? P(150 + ad, 110, 'E₂') : ''}${P(Math.round(eq[0]), Math.round(eq[1]), lr ? 'E₂' : 'E₃')}</svg>`;
   }
   window.graphSvg = g => g ? `<figure class="graph">${g.type === 'fx' ? fx(g) : adas(g)}</figure>` : '';
+  // ข้อเขียนกราฟ: ผู้เรียนเลือกเส้นที่เลื่อนและผลลัพธ์ ระบบวาดกราฟจากคำตอบและตรวจกับค่าที่ได้จากสเปกกราฟของเฉลย
+  const sg = x => x > 0 ? '+' : x < 0 ? '-' : '0';
+  const SHIFT = [['0', 'ไม่เลื่อน'], ['+', 'เลื่อนขวา'], ['-', 'เลื่อนซ้าย']], DIR = [['+', 'เพิ่มขึ้น'], ['-', 'ลดลง'], ['0', 'เท่าเดิม']];
+  const kit = window.graphKit = {
+    fields: g => g.type === 'fx'
+      ? [['S', 'เส้นอุปทานเงินสกุลในประเทศ (S)', SHIFT], ['D', 'เส้นอุปสงค์เงินสกุลในประเทศ (D)', SHIFT], ['e', 'อัตราแลกเปลี่ยน e ที่ดุลยภาพใหม่', [['+', 'เพิ่มขึ้น (แข็งค่า)'], ['-', 'ลดลง (อ่อนค่า)']]]]
+      : [['AD', 'เส้น AD', SHIFT], ['LRAS', 'เส้น LRAS', SHIFT], ['srY', 'ผลผลิต Y ระยะสั้น', DIR], ['lrY', 'ผลผลิต Y ระยะยาว', DIR], ['lrP', 'ระดับราคา P ระยะยาว', [...DIR, ['?', 'ไม่แน่นอน']]]],
+    expect(g) {
+      if (g.type === 'fx') { const sh = g.shifts || [g.shift], S = sh.includes('S+') ? '+' : sh.includes('S-') ? '-' : '0', D = sh.includes('D+') ? '+' : sh.includes('D-') ? '-' : '0'; return { S, D, e: D === '+' || S === '-' ? '+' : '-' }; }
+      const a = Math.sign(g.ad || 0), l = Math.sign(g.lras || 0);
+      return { AD: sg(a), LRAS: sg(l), srY: sg(a), lrY: sg(l), lrP: !l ? sg(a) : !a ? sg(-l) : a !== l ? sg(a) : '?' };
+    },
+    score(g, v) { const ex = kit.expect(g), F = Object.keys(ex); return F.filter(f => (v || {})[f] === ex[f]).length / F.length; },
+    draw(g, v) { v = v || {}; const d = x => x === '+' ? 40 : x === '-' ? -40 : 0;
+      return g.type === 'fx' ? window.graphSvg({ type: 'fx', shifts: [d(v.S) ? 'S' + v.S : '', d(v.D) ? 'D' + v.D : ''].filter(Boolean) }) : window.graphSvg({ type: 'adas', ad: d(v.AD), lras: d(v.LRAS) }); },
+  };
 })();

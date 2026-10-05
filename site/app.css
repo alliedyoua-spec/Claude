@@ -82,3 +82,17 @@ input.num{max-width:14rem;font-family:var(--font-mono)} textarea{resize:vertical
 @media (max-width:520px){.score{grid-template-columns:1fr}.bar{grid-template-columns:1fr 56px}.bar i{grid-column:1/-1;grid-row:2}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 .conf{margin-bottom:8px} #suslist{font:.85rem/1.6 var(--font-mono)}
+.gw{border:1px solid var(--line);border-radius:10px;padding:12px;margin-block:10px;background:var(--bg)}
+.gwgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:16px;align-items:start;margin-top:8px}
+.gwf{display:grid;gap:4px} .gwf label{font-size:.9rem;color:var(--muted);margin-top:6px}
+.gwf select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:0;max-width:100%}
+.gwv .graph{margin:0}
+.hint{background:var(--accent-soft);border-radius:8px;padding:8px 12px;margin-block:10px;font-size:.93rem}
+.hint .btn{margin-left:6px}
+.calc{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.calc input.num{max-width:20rem;flex:1 1 12rem} .calc details{margin-top:6px;font-size:.9rem}
+.aires{background:var(--surface2);border-radius:8px;padding:8px 12px;margin-top:8px}
+.ai{margin-top:10px}
+.note-t ul{padding-left:1.2em} .formula{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
+@media (max-width:620px){.gwgrid{grid-template-columns:1fr}}

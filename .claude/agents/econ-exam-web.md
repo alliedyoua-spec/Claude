@@ -23,14 +23,17 @@ site/
   sets/<ชื่อ>.js แต่ละชุดเรียก registerSet({...}) โหลดด้วย <script>
   check.js       node site/check.js ตรวจโครงสร้างและคำนวณเฉลยซ้ำ (ใช้ field expr/checks)
   levels.js      ระดับความยากของข้อ (1 ง่าย, 2 ปานกลาง, 3 ยาก) สำหรับข้อที่ไม่ได้ระบุ lvl ในไฟล์ชุด
-  papers.js      สร้างชุดสอบตาม CONFIG.levels (seed คงที่)
+  papers.js      สร้างชุดสอบตาม CONFIG.levels (seed คงที่) ข้อกา 300 ช่องต้องไม่ซ้ำกัน
+  graphs.js      กราฟ SVG + graphKit (ข้อเขียนกราฟ: expect/score/draw จาก field graph ของข้อ)
+  notes.js       สรุปก่อนสอบ + สรุปรายหน้าสไลด์ (ใช้แสดงคำใบ้เมื่อตอบผิด)
   build.js       node site/build.js → site/exam.html (ไฟล์เดียว) และ site/artifact.html (เผยแพร่เป็น Artifact)
 ```
 
 - ใช้ `<script>` ไม่ใช้ `fetch()` เพราะต้องเปิดจากไฟล์ในเครื่องได้
 - เพิ่มชุดใหม่ = เพิ่ม 1 ไฟล์ใน `sets/` + 1 บรรทัด `<script>` ใน `index.html` เท่านั้น
 - เก็บความก้าวหน้าและข้อที่ทำผิดใน `localStorage` ครอบด้วย try/catch และหน้าเว็บต้องใช้ได้เมื่อ storage ใช้ไม่ได้
-- กราฟเป็น SVG นิ่งจากเทมเพลต (AD-AS, ตลาดเงินตราต่างประเทศ) ไม่ใช้ chart library
+- กราฟเป็น SVG จากเทมเพลต (AD-AS, ตลาดเงินตราต่างประเทศ) ไม่ใช้ chart library ข้อเขียนที่มี `graph` จะให้ผู้เรียนเลือกเส้นที่เลื่อนและตรวจอัตโนมัติ
+- การตรวจคำอธิบายด้วย Claude ใช้ capability `sample` (ประกาศตอนเผยแพร่ artifact) ต้องซ่อนปุ่มเมื่อใช้ไม่ได้
 
 # ขอบเขตเนื้อหา
 
