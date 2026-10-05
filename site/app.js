@@ -4,7 +4,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const key = it => it.set.id + ':' + it.q.id, topicOf = it => it.q.topic || it.set.topic;
 const KIND = { mcq: 'ข้อกา', calc: 'คำนวณ', written: 'ข้อเขียน' }, LV = ['', 'ง่าย', 'ปานกลาง', 'ยาก', 'ท้าทาย'], mm = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 // ป้ายความเชื่อมั่นของเฉลย: ดูจากหมายเหตุ (note) ก่อน แล้วจึงดูว่าคำนวณซ้ำด้วยโค้ดหรือไม่
-const CONF = { import: ['warn', 'โจทย์ที่คุณส่งมา (เฉลยเดิมของไฟล์)'], slide: ['ok', 'ตรงสไลด์'], code: ['ok', 'ตัวเลขคำนวณซ้ำด้วยโค้ดแล้ว'], applied: ['warn', 'ประยุกต์จากสไลด์'], general: ['warn', 'ความรู้พื้นฐานนอกสไลด์'] };
+const CONF = { import: ['ok', 'โจทย์ที่คุณส่งมา · ผ่านการตรวจแบบไม่เห็นเฉลย'], slide: ['ok', 'ตรงสไลด์'], code: ['ok', 'ตัวเลขคำนวณซ้ำด้วยโค้ดแล้ว'], applied: ['warn', 'ประยุกต์จากสไลด์'], general: ['warn', 'ความรู้พื้นฐานนอกสไลด์'] };
 const confOf = it => { const q = it.q;
   if (it.set.conf) return it.set.conf;
   if (q.note) return /พื้นฐาน|นอกสไลด์/.test(q.note) ? 'general' : 'applied';
