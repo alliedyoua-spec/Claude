@@ -11,6 +11,7 @@ Each plugin owns one layer. When they conflict, this file wins.
 
 ## Rules
 - **Trivial tasks** (one obvious file, no design choice): skip brainstorming and plan skills. Just do it, with ponytail scope and verification-before-completion.
+- **No spec files:** brainstorming answers and design go in chat. Write `docs/superpowers/specs/*` only if the user asks.
 - **One pipeline:** superpowers `writing-plans` / `executing-plans` / `subagent-driven-development`. Do not use claude-mem `make-plan` or `do`.
 - **Review:** `requesting-code-review` for correctness, then `ponytail-review` for over-engineering. No third reviewer.
 - **Debugging:** `systematic-debugging`. Fix the root cause once, in the shared place (ponytail).
