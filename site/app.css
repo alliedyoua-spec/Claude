@@ -96,3 +96,5 @@ input.num{max-width:14rem;font-family:var(--font-mono)} textarea{resize:vertical
 .note-t ul{padding-left:1.2em} .formula{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
 a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 @media (max-width:620px){.gwgrid{grid-template-columns:1fr}}
+.gws{margin-top:12px;padding-top:6px;border-top:1px solid var(--line);font-size:.8rem;letter-spacing:.04em;color:var(--accent);font-weight:600} .gws:first-child{margin-top:0;border-top:0;padding-top:0}
+.gwf select{width:100%}

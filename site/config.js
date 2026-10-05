@@ -7,7 +7,8 @@ window.CONFIG = {
   levels: [
     { name: 'ง่าย', papers: 3, mcq: { 1: 24, 2: 6 }, written: [1, 2] },
     { name: 'ปานกลาง', papers: 4, mcq: { 1: 6, 2: 18, 3: 6 }, written: [2] },
-    { name: 'ยาก', papers: 3, mcq: { 2: 10, 3: 20 }, written: [3] },
+    { name: 'ยาก', papers: 3, mcq: { 2: 8, 3: 18, 4: 4 }, written: [3] },
+    { name: 'ท้าทาย', papers: 3, mcq: { 3: 8, 4: 22 }, written: [3, 4] },
   ],
 };
 window.SETS = [];

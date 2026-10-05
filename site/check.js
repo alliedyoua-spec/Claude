@@ -2,7 +2,7 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const ctx = {}; ctx.window = ctx; vm.createContext(ctx);
 const run = f => vm.runInContext(fs.readFileSync(path.join(__dirname, f), 'utf8'), ctx);
-run('config.js'); fs.readdirSync(path.join(__dirname, 'sets')).forEach(f => run('sets/' + f)); run('levels.js'); run('papers.js');
+run('config.js'); fs.readdirSync(path.join(__dirname, 'sets')).forEach(f => run('sets/' + f)); run('graph-meta.js'); run('graphs.js'); run('levels.js'); run('papers.js');
 let bad = 0; const fail = m => { console.error('FAIL', m); bad++; };
 for (const s of ctx.SETS) for (const q of s.questions) {
   const id = s.id + ':' + q.id;
@@ -11,7 +11,7 @@ for (const s of ctx.SETS) for (const q of s.questions) {
   for (const [e, v] of q.checks || []) if (!(Math.abs(vm.runInContext(e, ctx) - v) <= Math.max(1e-6, Math.abs(v) * 1e-4))) fail(id + ' check ' + e);
   if (q.type === 'mcq' && !(q.choices && q.choices[q.answer] !== undefined && new Set(q.choices).size === q.choices.length)) fail(id + ' bad mcq answer/dup choices');
 }
-for (const s of ctx.SETS) if (s.exam) for (const q of s.questions) if (![1, 2, 3].includes(q.lvl)) fail(s.id + ':' + q.id + ' missing lvl');
+for (const s of ctx.SETS) if (s.exam) for (const q of s.questions) if (![1, 2, 3, 4].includes(q.lvl)) fail(s.id + ':' + q.id + ' missing lvl');
 const ids = ctx.SETS.map(s => s.id); if (new Set(ids).size !== ids.length) fail('duplicate set id');
 const C = ctx.CONFIG, W = Object.values(C.writtenByTopic).reduce((a, b) => a + b, 0);
 ctx.PAPERS.forEach(p => {

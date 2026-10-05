@@ -2,7 +2,7 @@
 const C = window.CONFIG, SETS = window.SETS, PAPERS = window.PAPERS, root = document.getElementById('app');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const key = it => it.set.id + ':' + it.q.id, topicOf = it => it.q.topic || it.set.topic;
-const KIND = { mcq: 'ข้อกา', calc: 'คำนวณ', written: 'ข้อเขียน' }, LV = ['', 'ง่าย', 'ปานกลาง', 'ยาก'], mm = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const KIND = { mcq: 'ข้อกา', calc: 'คำนวณ', written: 'ข้อเขียน' }, LV = ['', 'ง่าย', 'ปานกลาง', 'ยาก', 'ท้าทาย'], mm = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 // ป้ายความเชื่อมั่นของเฉลย: ดูจากหมายเหตุ (note) ก่อน แล้วจึงดูว่าคำนวณซ้ำด้วยโค้ดหรือไม่
 const CONF = { slide: ['ok', 'ตรงสไลด์'], code: ['ok', 'ตัวเลขคำนวณซ้ำด้วยโค้ดแล้ว'], applied: ['warn', 'ประยุกต์จากสไลด์'], general: ['warn', 'ความรู้พื้นฐานนอกสไลด์'] };
 const confOf = it => { const q = it.q;
@@ -76,8 +76,10 @@ function optsHtml(it, n, val, reveal, perm) {
   return `<div class="opts">${order.map(i => `<label class="opt ${reveal ? (i === it.q.answer ? 'ok' : val === i ? 'no' : '') : ''}"><input type="radio" name="r${n}" data-k="${esc(key(it))}" value="${i}" ${val === i ? 'checked' : ''} ${reveal ? 'disabled' : ''}><span>${esc(it.q.choices[i])}</span></label>`).join('')}</div>`;
 }
 function graphWidget(it, n, v, ro) {
-  const g = it.q.graph, ex = GK.expect(g); v = v || {};
-  return `<div class="gw"><div><b>วาดกราฟ</b> <small class="muted">${ro ? 'กราฟของคุณ (เทียบเฉลยด้านล่าง)' : 'เลือกเส้นที่เลื่อนและผลที่เกิดขึ้น กราฟจะเปลี่ยนตามคำตอบ'}</small></div><div class="gwgrid"><div class="gwf">${GK.fields(g).map(([f, label, opts]) => `<label for="g${n}${f}">${label}</label><div class="row"><select id="g${n}${f}" data-g="${esc(key(it))}" data-f="${f}" data-n="${n}" ${ro ? 'disabled' : ''}><option value="">เลือก</option>${opts.map(([x, t]) => `<option value="${x}" ${v[f] === x ? 'selected' : ''}>${t}</option>`).join('')}</select>${ro ? (v[f] === ex[f] ? '<span class="pill ok">ถูก</span>' : `<span class="pill bad">เฉลย: ${opts.find(o => o[0] === ex[f])[1]}</span>`) : ''}</div>`).join('')}</div><div class="gwv" id="gv${n}">${GK.draw(g, v)}</div></div></div>`;
+  const g = it.q.graph, ex = GK.expect(g), fields = GK.fields(g, n); v = v || {}; let sec = '';
+  const row = ([f, label, opts, s]) => { const h = s !== sec ? `<div class="gws">${esc(s)}</div>` : ''; sec = s;
+    return h + `<label for="g${n}${f}">${label}</label><div class="row"><select id="g${n}${f}" data-g="${esc(key(it))}" data-f="${f}" data-n="${n}" ${ro ? 'disabled' : ''}><option value="">เลือก</option>${opts.map(([x, t]) => `<option value="${x}" ${v[f] === x ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>${ro ? (v[f] === ex[f] ? '<span class="pill ok">ถูก</span>' : `<span class="pill bad">เฉลย: ${esc(opts.find(o => o[0] === ex[f])[1])}</span>`) : ''}</div>`; };
+  return `<div class="gw"><div><b>วาดกราฟและวิเคราะห์ทีละขั้น</b> <small class="muted">${ro ? 'คำตอบของคุณ เทียบเฉลย' : 'เลือกคำตอบ กราฟจะเปลี่ยนตามที่เลือก'}</small></div><div class="gwgrid"><div class="gwf">${fields.map(row).join('')}</div><div class="gwv" id="gv${n}">${GK.draw(g, v)}</div></div></div>`;
 }
 const qGraph = it => it.q.type === 'mcq' && it.q.graph ? window.graphSvg(it.q.graph) : '';
 function inputHtml(it, n, val, perm) {
@@ -117,7 +119,7 @@ const views = {
     const weak = Object.entries(tm).map(([t, o]) => [t, o.s / o.n, o.n]).sort((a, b) => a[1] - b[1]);
     const d = DB.draft, wN = Object.values(C.writtenByTopic).reduce((a, b) => a + b, 0), byKey = Object.fromEntries(allItems().map(it => [key(it), it]));
     return `<div class="head"><div><div class="eyebrow">Economics for Business 01101102 · เศรษฐศาสตร์มหภาค</div><h1>ระบบฝึกข้อสอบเศรษฐศาสตร์</h1></div></div>
-    <p class="muted">ข้อสอบ ${PAPERS.length} ชุด แบ่งเป็น 3 ระดับ ชุดละข้อกา ${C.mcqCount} ข้อ + ข้อเขียน ${wN} ข้อ (${Object.entries(C.writtenByTopic).map(([t, n]) => t + ' ' + n).join(' · ')}) เวลา ${C.minutes} นาที</p>
+    <p class="muted">ข้อสอบ ${PAPERS.length} ชุด แบ่งเป็น ${C.levels.length} ระดับ ชุดละข้อกา ${C.mcqCount} ข้อ + ข้อเขียน ${wN} ข้อ (${Object.entries(C.writtenByTopic).map(([t, n]) => t + ' ' + n).join(' · ')}) เวลา ${C.minutes} นาที</p>
     ${d ? `<div class="banner"><span>มีข้อสอบ ${esc(paperOf(d.paper).title)} ที่ทำค้างไว้ (เหลือ ${mm(Math.max(0, Math.round((d.endAt - Date.now()) / 1000)))})</span><span class="row"><button class="btn primary sm" data-act="resume">ทำต่อ</button><button class="btn sm" data-act="drop">ทิ้งฉบับร่าง</button></span></div>` : ''}
     <div class="stats"><div class="stat"><b>${done.size}/${PAPERS.length}</b><span>ชุดที่ทำแล้ว</span></div><div class="stat"><b>${avg === null ? '-' : avg + '%'}</b><span>คะแนนเฉลี่ย (ครั้งล่าสุดของแต่ละชุด)</span></div><div class="stat"><b>${DB.wrong.length}</b><span>ข้อที่ควรทบทวน</span></div><div class="stat"><b>${DB.attempts.length}</b><span>ครั้งที่สอบทั้งหมด</span></div></div>
     ${C.levels.map((L, li) => `<div class="section"><h2>ระดับ${L.name}</h2><small>ข้อกา ${mixText(L)} · ข้อเขียนระดับ${L.written.map(l => LV[l]).join('/')}</small></div>
