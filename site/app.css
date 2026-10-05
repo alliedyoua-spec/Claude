@@ -99,3 +99,8 @@ a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .gws{margin-top:12px;padding-top:6px;border-top:1px solid var(--line);font-size:.8rem;letter-spacing:.04em;color:var(--accent);font-weight:600} .gws:first-child{margin-top:0;border-top:0;padding-top:0}
 .gwf select{width:100%}
 .gwa{margin-top:2px}
+/* รูปจากโจทย์ที่นำเข้า: ใช้ตัวแปรสีของหน้านี้ */
+:root{--ink-2:var(--muted);--curve-ad:var(--accent);--curve-as:var(--bad);--curve-lras:var(--ok);--curve-ghost:var(--muted);--line-2:var(--line)}
+.figwrap{margin:10px 0;max-width:560px;overflow-x:auto} .figwrap svg{width:100%;height:auto;display:block;max-width:560px}
+.figwrap svg text{font-family:var(--font-body)} .figwrap table{border-collapse:collapse;font-size:.9rem} .figwrap th,.figwrap td{border:1px solid var(--line);padding:4px 10px;text-align:left}
+.whys{margin-top:10px;font-size:.92rem} .whys summary{cursor:pointer;color:var(--accent)} .whys ul{padding-left:1.1em} .whys li{margin-block:6px}

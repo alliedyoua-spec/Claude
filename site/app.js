@@ -4,8 +4,9 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const key = it => it.set.id + ':' + it.q.id, topicOf = it => it.q.topic || it.set.topic;
 const KIND = { mcq: 'ข้อกา', calc: 'คำนวณ', written: 'ข้อเขียน' }, LV = ['', 'ง่าย', 'ปานกลาง', 'ยาก', 'ท้าทาย'], mm = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 // ป้ายความเชื่อมั่นของเฉลย: ดูจากหมายเหตุ (note) ก่อน แล้วจึงดูว่าคำนวณซ้ำด้วยโค้ดหรือไม่
-const CONF = { slide: ['ok', 'ตรงสไลด์'], code: ['ok', 'ตัวเลขคำนวณซ้ำด้วยโค้ดแล้ว'], applied: ['warn', 'ประยุกต์จากสไลด์'], general: ['warn', 'ความรู้พื้นฐานนอกสไลด์'] };
+const CONF = { import: ['warn', 'โจทย์ที่คุณส่งมา (เฉลยเดิมของไฟล์)'], slide: ['ok', 'ตรงสไลด์'], code: ['ok', 'ตัวเลขคำนวณซ้ำด้วยโค้ดแล้ว'], applied: ['warn', 'ประยุกต์จากสไลด์'], general: ['warn', 'ความรู้พื้นฐานนอกสไลด์'] };
 const confOf = it => { const q = it.q;
+  if (it.set.conf) return it.set.conf;
   if (q.note) return /พื้นฐาน|นอกสไลด์/.test(q.note) ? 'general' : 'applied';
   if (!it.set.exam) return 'general';
   return q.type === 'calc' || (q.checks && q.checks.length) || q.gen || it.set.id === 'gen-mcq' ? 'code' : 'slide'; };
@@ -82,7 +83,13 @@ function graphWidget(it, n, v, ro) {
   const assume = g.type === 'fx' ? 'สมมติฐาน: ปัจจัยอื่นคงที่ (ceteris paribus) ผลต่อ NX ใช้ผลโดยตรงของตัวกำหนดอัตราแลกเปลี่ยน แล้วต่อเข้า AD-AS โดยเริ่มจากดุลยภาพระยะยาว' : 'สมมติฐาน: เริ่มจากดุลยภาพระยะยาว (E₁) และ SRAS แนวนอน (ระยะสั้นราคาคงที่ ระยะยาวราคาปรับ)';
   return `<div class="gw"><div><b>วาดกราฟและวิเคราะห์ทีละขั้น</b> <small class="muted">${ro ? 'คำตอบของคุณ เทียบเฉลย' : 'เลือกคำตอบ กราฟจะเปลี่ยนตามที่เลือก'}</small><div class="gwa"><small class="muted">${assume}</small></div></div><div class="gwgrid"><div class="gwf">${fields.map(row).join('')}</div><div class="gwv" id="gv${n}">${GK.draw(g, v)}</div></div></div>`;
 }
-const qGraph = it => it.q.type === 'mcq' && it.q.graph ? window.graphSvg(it.q.graph) : '';
+function cleanFig(h) { // รูปจากไฟล์ที่นำเข้า: ตัด script/handler ออก (กันไว้อีกชั้น)
+  const t = document.createElement('template'); t.innerHTML = h;
+  t.content.querySelectorAll('script,iframe,object,embed,foreignObject').forEach(n => n.remove());
+  t.content.querySelectorAll('*').forEach(n => [...n.attributes].forEach(a => { if (/^on/i.test(a.name) || /javascript:/i.test(a.value)) n.removeAttribute(a.name); }));
+  return t.innerHTML;
+}
+const qGraph = it => (it.q.type === 'mcq' && it.q.graph ? window.graphSvg(it.q.graph) : '') + (it.q.fig ? `<div class="figwrap">${cleanFig(it.q.fig)}</div>` : '');
 function inputHtml(it, n, val, perm) {
   const q = it.q, k = esc(key(it));
   if (q.type === 'mcq') return optsHtml(it, n, val, false, perm);
@@ -90,8 +97,10 @@ function inputHtml(it, n, val, perm) {
   return `${hasG(q) ? graphWidget(it, n, (S.ans || {})[key(it) + '#g'] || (S.gans || {})[key(it)], false) : ''}<textarea id="in${n}" data-k="${k}" rows="4" placeholder="${hasG(q) ? 'อธิบายกลไกและผลที่เกิดขึ้น' : 'พิมพ์คำตอบหรือสรุปแนวคิด'} (ประเมินตัวเองหรือให้ Claude ตรวจหลังดูเฉลย)">${esc(val ?? '')}</textarea>`;
 }
 const susBtn = k => `<button class="btn sm" data-act="sus" data-k="${esc(k)}">${DB.sus.includes(k) ? 'ยกเลิกการรายงาน' : 'รายงานว่าเฉลยน่าสงสัย'}</button>`;
+const whyList = it => { const q = it.q; if (!q.whys || !q.whys.length || q.type !== 'mcq') return '';
+  return `<details class="whys"><summary>ทำไมแต่ละตัวเลือกถูกหรือผิด</summary><ul>${q.choices.map((c, i) => q.whys[i] ? `<li><b>${esc(c.length > 60 ? c.slice(0, 60) + '…' : c)}</b><br>${esc(q.whys[i])}</li>` : '').join('')}</ul></details>`; };
 const solHtml = it => { const c = CONF[confOf(it)];
-  return `<div class="sol"><div class="row conf"><span class="pill ${c[0]}">${c[1]}</span>${susBtn(key(it))}</div>${it.q.type === 'mcq' ? '' : (hasG(it.q) ? '<small class="muted">กราฟเฉลย</small>' : '') + window.graphSvg(it.q.graph)}<div class="soltxt">${esc(it.q.a)}</div>${it.q.note ? `<p class="note">ตรวจเพิ่ม: ${esc(it.q.note)}</p>` : ''}</div>`; };
+  return `<div class="sol"><div class="row conf"><span class="pill ${c[0]}">${c[1]}</span>${susBtn(key(it))}</div>${it.q.type === 'mcq' ? '' : (hasG(it.q) ? '<small class="muted">กราฟเฉลย</small>' : '') + window.graphSvg(it.q.graph)}<div class="soltxt">${esc(it.q.a)}</div>${whyList(it)}${it.q.tip ? `<p class="note">เคล็ดลับ: ${esc(it.q.tip)}</p>` : ''}${it.q.note ? `<p class="note">ตรวจเพิ่ม: ${esc(it.q.note)}</p>` : ''}</div>`; };
 const head = (it, n, extra = '') => `<div class="qhead"><span class="qno">${n + 1}.</span><span class="pill">${KIND[it.q.type]}</span>${it.q.lvl ? `<span class="pill">${LV[it.q.lvl]}</span>` : ''}<small>${esc(it.set.title)} · ${esc(it.q.ref || '')}</small>${extra}</div>`;
 const marksHtml = (k, cur, act) => `<div class="marks"><span>ประเมินตัวเอง:</span>${[[1, 'ได้เต็ม'], [.5, 'ได้บางส่วน'], [0, 'ยังไม่ได้']].map(([v, t]) => `<button class="btn sm ${cur === v ? 'on' : ''}" data-act="${act}" data-k="${esc(k)}" data-v="${v}">${t}</button>`).join('')}</div>`;
 const AI_ERR = { not_granted: 'ไม่ได้รับอนุญาตให้ใช้ Claude ในหน้านี้ ประเมินตัวเองแทนได้', sampling_disabled: 'บัญชีนี้ใช้ Claude ในหน้านี้ไม่ได้', rate_limited: 'เรียกใช้ถี่เกินไป ลองใหม่ภายหลัง', session_expired: 'กรุณาเข้าสู่ระบบ claude.ai ใหม่', invalid_json: 'Claude ตอบกลับไม่ได้ตามรูปแบบ ลองกดอีกครั้ง', refused: 'Claude ไม่ตรวจข้อความนี้' };
@@ -132,7 +141,7 @@ const views = {
       <div class="paper"><h3>ตีความกราฟ</h3><small>ดูกราฟแล้วเลือกสถานการณ์หรือผลที่ตรงกัน ${(SETS.find(x => x.id === 'graph-mcq') || { questions: [] }).questions.length} ข้อ</small><div class="row"><button class="btn primary sm" data-act="set" data-id="graph-mcq">เริ่มตีความกราฟ</button></div></div>
       <div class="paper"><h3>สรุปก่อนสอบ</h3><small>ประเด็นสำคัญและแผ่นสูตร 4 หัวข้อ พร้อมเลขหน้าสไลด์</small><div class="row"><button class="btn sm" data-act="notes" data-t="unemp">เปิดสรุป</button></div></div></div>
     <h2>ฝึกทีละหัวข้อ</h2><div class="list"><div class="item"><div><b>สมุดข้อผิด</b><br><small>รวมข้อที่ตอบผิดหรือประเมินว่ายังไม่ได้ (${DB.wrong.length} ข้อ)</small></div><button class="btn sm" data-act="wrong" ${DB.wrong.length ? '' : 'disabled'}>ฝึกข้อผิด</button></div>
-    ${SETS.map(s => `<div class="item"><div><b>${esc(s.title)}</b><br><small>${s.questions.length} ข้อ · ${s.kind === 'original' ? 'ต้นฉบับ' : 'เขียนเพิ่ม'}${s.exam ? '' : ' · นอกขอบเขตสอบ (ทบทวน)'}</small></div><button class="btn sm" data-act="set" data-id="${s.id}">เริ่มฝึก</button></div>`).join('')}</div>
+    ${SETS.map(s => `<div class="item"><div><b>${esc(s.title)}</b><br><small>${s.questions.length} ข้อ · ${s.kind === 'original' ? 'ต้นฉบับ' : s.kind === 'import' ? 'ที่คุณส่งมา' : 'เขียนเพิ่ม'}${s.exam ? '' : ' · นอกขอบเขตสอบ (ทบทวน)'}</small></div><button class="btn sm" data-act="set" data-id="${s.id}">เริ่มฝึก</button></div>`).join('')}</div>
     ${DB.sus.length ? `<h2>เฉลยที่คุณรายงานว่าน่าสงสัย (${DB.sus.length})</h2><p class="muted">คัดลอกรายการนี้ส่งให้ Claude ตรวจและแก้ไข</p><textarea id="suslist" rows="${Math.min(8, DB.sus.length + 1)}" readonly>${esc(DB.sus.map(k => k + ' | ' + (byKey[k] ? byKey[k].q.q.replace(/\s+/g, ' ').slice(0, 80) : '')).join('\n'))}</textarea><div class="row" style="margin-top:8px"><button class="btn sm" data-act="copysus">คัดลอกรายการ</button><span id="copied" class="muted"></span></div>` : ''}
     <h2>ป้ายความเชื่อมั่นของเฉลย</h2><div class="row">${Object.values(CONF).map(c => `<span class="pill ${c[0]}">${c[1]}</span>`).join('')}</div>
     <p class="muted" style="margin-top:24px"><small>ข้อมูลความก้าวหน้าเก็บในเบราว์เซอร์นี้เท่านั้น เปลี่ยนเครื่องหรือล้างข้อมูลเว็บแล้วจะหาย ระดับความยากและเฉลยที่ไม่ได้มาจากสไลด์ประเมินโดย Claude ไม่ได้เทียบกับข้อสอบจริง โจทย์ต้นฉบับเป็นของอาจารย์ผู้สอน ใช้เพื่อการเรียนส่วนตัว</small></p>`;
@@ -170,6 +179,7 @@ const views = {
     return `<button class="btn sm" data-act="home">← กลับ</button><h1 style="margin-top:12px">สรุปก่อนสอบ</h1><p class="muted">เรียบเรียงจากสไลด์ บท 4-5, Abel Ch.9 และ Ch.13 ข้อที่เกินสไลด์ระบุไว้ในวงเล็บ</p>
     <div class="tabs">${NOTES.topics.map(t => `<a class="btn sm" href="#t-${t.id}">${esc(t.title)}</a>`).join('')}</div>
     ${NOTES.topics.map(t => `<section class="note-t" id="t-${t.id}"><h2>${esc(t.title)}</h2><ul>${t.body.map(x => `<li>${esc(x)}</li>`).join('')}</ul><div class="formula"><b>สูตร</b><ul>${t.formulas.map(x => `<li class="mono">${esc(x)}</li>`).join('')}</ul></div></section>`).join('')}
+    ${(window.IMP_TIPS || []).length ? `<h2>เคล็ดลับตามหัวข้อ (จากไฟล์ที่คุณส่งมา)</h2><div class="list">${window.IMP_TIPS.map(t => `<div class="item"><div><b>${esc(t.name)}</b><br><small>${esc(t.tip)}</small></div></div>`).join('')}</div>` : ''}
     <h2>สรุปรายหน้าสไลด์ (บท 4-5)</h2><div class="list">${Object.entries(NOTES.pages).map(([p, x]) => `<div class="item"><div><b class="mono">หน้า ${p}</b><br><small>${esc(x)}</small></div></div>`).join('')}</div>`;
   },
   practice() {
