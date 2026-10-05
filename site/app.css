@@ -81,3 +81,4 @@ input.num{max-width:14rem;font-family:var(--font-mono)} textarea{resize:vertical
 .graph .gt{fill:var(--ink);font:11px var(--font-body)} .graph .gt-s{fill:var(--bad)} .graph .gt-d{fill:var(--accent)} .graph .gt-l{fill:var(--ok)} .graph .gp{fill:var(--ink)}
 @media (max-width:520px){.score{grid-template-columns:1fr}.bar{grid-template-columns:1fr 56px}.bar i{grid-column:1/-1;grid-row:2}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.conf{margin-bottom:8px} #suslist{font:.85rem/1.6 var(--font-mono)}

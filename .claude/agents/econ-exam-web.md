@@ -22,7 +22,8 @@ site/
   config.js      จำนวนข้อ คะแนน เวลาสอบ (แก้ได้โดยไม่แตะโค้ด)
   sets/<ชื่อ>.js แต่ละชุดเรียก registerSet({...}) โหลดด้วย <script>
   check.js       node site/check.js ตรวจโครงสร้างและคำนวณเฉลยซ้ำ (ใช้ field expr/checks)
-  papers.js      แจกไพ่จากคลังโจทย์เป็นชุดสอบ 10 ชุด (seed คงที่)
+  levels.js      ระดับความยากของข้อ (1 ง่าย, 2 ปานกลาง, 3 ยาก) สำหรับข้อที่ไม่ได้ระบุ lvl ในไฟล์ชุด
+  papers.js      สร้างชุดสอบตาม CONFIG.levels (seed คงที่)
   build.js       node site/build.js → site/exam.html (ไฟล์เดียว) และ site/artifact.html (เผยแพร่เป็น Artifact)
 ```
 
