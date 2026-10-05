@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ฝึกข้อสอบเศรษฐศาสตร์</title>
+<style>
+:root{--bg:#f7f7f4;--fg:#1d1d1f;--card:#fff;--line:#d8d8d2;--acc:#0b6bcb;--ok:#18794e;--no:#c0362c}
+@media(prefers-color-scheme:dark){:root{--bg:#17181a;--fg:#ececec;--card:#222427;--line:#3a3d41;--acc:#5aa9ff;--ok:#4cc38a;--no:#ff7b72}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 "Noto Sans Thai","Sarabun","Loma",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}
+button{font:inherit;padding:6px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);cursor:pointer;margin:2px}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tag{font-size:.8rem;border:1px solid var(--line);border-radius:6px;padding:0 6px;margin-left:6px}
+.q{white-space:pre-line}.a{white-space:pre-line;border-left:3px solid var(--acc);padding-left:10px;margin-top:8px}
+.ok{color:var(--ok)}.no{color:var(--no)}small{opacity:.7}
+svg{max-width:320px;width:100%;display:block;margin:8px 0}
+input[type=text]{font:inherit;padding:4px 8px;width:9em}
+</style>
+</head>
+<body><main id="app"></main>
+<script src="config.js"></script>
+<script src="sets/exchange-rate.js"></script>
+<script>
+const $ = document.getElementById('app'), C = window.CONFIG, SETS = window.SETS;
+const mem = {};
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return mem[k] ?? d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { mem[k] = v; } },
+};
+const shuffle = a => a.map(x => [Math.random(), x]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+const key = i => i.set.id + ':' + i.q.id;
+let items = [], mode = 'practice', timer = 0, submitted = false, score = {};
+
+// กราฟตลาดเงินตรา: s = S+|S-|D+|D- (เส้นอุปทาน/อุปสงค์เลื่อนขวา/ซ้าย)
+function fxGraph(s) {
+  const dx = s[1] === '+' ? 40 : -40, sup = s[0] === 'S';
+  const L = (x1, y1, x2, y2, c, d) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="2" ${d ? 'stroke-dasharray="5"' : ''}/>`;
+  const S = o => L(50 + o, 180, 250 + o, 40, '#c0362c', o), D = o => L(50 + o, 40, 250 + o, 180, '#0b6bcb', o);
+  const x2 = 150 + dx / 2, y2 = sup ? 110 + dx * .35 : 110 - dx * .35, t = (x, y, v, c) => `<text x="${x}" y="${y}" fill="${c || 'currentColor'}" font-size="12">${v}</text>`;
+  return `<svg viewBox="0 0 300 230" aria-label="กราฟตลาดเงินตรา">${L(50, 20, 50, 200, 'gray') + L(50, 200, 290, 200, 'gray')}
+  ${S(0)}${D(0)}${sup ? S(dx) : D(dx)}<circle cx="150" cy="110" r="3"/><circle cx="${x2}" cy="${y2}" r="3"/>
+  ${t(54, 14, 'e (เงินตราตปท. ต่อเงินในประเทศ)')}${t(160, 218, 'ปริมาณเงินในประเทศ')}${t(150 + 5, 106, 'E₁')}${t(x2 + 5, y2 - 5, 'E₂')}
+  ${t(252, 40, 'S', '#c0362c')}${t(252, 182, 'D', '#0b6bcb')}${t(sup ? 252 + dx : 252 + (dx > 0 ? dx : 0), sup ? 40 : 182, sup ? "S′" : "D′", sup ? '#c0362c' : '#0b6bcb')}</svg>`;
+}
+const graph = g => g ? { fx: fxGraph }[g.type](g.shift) : '';
+
+function home() {
+  mode = 'practice'; clearInterval(timer);
+  const wrong = store.get('wrong', []);
+  $.innerHTML = `<h1>ฝึกข้อสอบเศรษฐศาสตร์</h1>
+  <div class="card"><button class="p" data-act="mock">สอบจำลองเต็ม</button>
+  <button data-act="review">ทบทวนข้อที่ผิด (${wrong.length})</button></div>
+  ${SETS.map(s => `<div class="card"><b>${s.title}</b><span class="tag">${s.kind === 'original' ? 'ต้นฉบับ' : 'ฝึกเพิ่ม'}</span>
+  <br><small>${s.questions.length} ข้อ · ${s.source}</small><br><button data-act="set" data-id="${s.id}">เริ่มทำ</button></div>`).join('')}`;
+}
+
+function start(m, list, minutes) {
+  mode = m; items = list; submitted = false; score = {};
+  render();
+  if (m === 'mock') {
+    let left = minutes * 60; const el = () => document.getElementById('timer'); el().textContent = minutes + ':00';
+    timer = setInterval(() => { left--; if (el()) el().textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); if (left <= 0) submit(); }, 1000);
+  }
+}
+
+function mock() {
+  const mcq = shuffle(SETS.filter(s => s.exam).flatMap(s => s.questions.filter(q => q.type === 'mcq').map(q => ({ set: s, q })))).slice(0, C.mcqCount);
+  const written = Object.entries(C.writtenByTopic).flatMap(([t, n]) => shuffle(SETS.filter(s => s.exam && s.topic === t).flatMap(s => s.questions.filter(q => q.type === 'written').map(q => ({ set: s, q })))).slice(0, n));
+  const extra = shuffle(SETS.filter(s => s.exam).flatMap(s => s.questions.filter(q => q.type === 'calc').map(q => ({ set: s, q }))));
+  start('mock', [...mcq, ...extra, ...written], C.minutes);
+}
+
+function card(it, n) {
+  const { q } = it, k = key(it);
+  const input = q.type === 'mcq' ? q.choices.map((c, i) => `<label><input type="radio" name="r${n}" value="${i}"> ${c}</label>`).join('<br>')
+    : q.type === 'calc' ? `<input type="text" id="t${n}" inputmode="decimal" placeholder="คำตอบ">` : '';
+  const btn = mode === 'mock' ? '' : q.type === 'written' ? `<button data-act="show" data-n="${n}">ดูเฉลย</button>` : `<button data-act="check" data-n="${n}">ตรวจ</button>`;
+  return `<div class="card" id="c${n}"><small>${it.set.title} · ${q.ref || ''}</small>
+  <div class="q">${n + 1}. ${q.q}</div>${input}<div>${btn}</div><div id="f${n}"></div></div>`;
+}
+
+function render() {
+  $.innerHTML = `<button data-act="home">← กลับ</button>${mode === 'mock' ? ' <b id="timer"></b> <button class="p" data-act="submit">ส่งข้อสอบ</button>' : ''}
+  <div id="score"></div>${items.map(card).join('')}`;
+}
+
+function reveal(n, ok) {
+  const it = items[n], q = it.q, f = document.getElementById('f' + n);
+  const mark = q.type === 'written' ? `<button data-act="self" data-n="${n}" data-v="1">ทำได้</button><button data-act="self" data-n="${n}" data-v="0">ทำไม่ได้</button>`
+    : `<b class="${ok ? 'ok' : 'no'}">${ok ? 'ถูก' : 'ผิด'}</b>`;
+  f.innerHTML = `${mark}${graph(q.graph)}<div class="a">${q.a}</div>`;
+  if (q.type !== 'written') record(n, ok);
+}
+
+function record(n, ok) {
+  const k = key(items[n]); score[k] = ok;
+  const wrong = new Set(store.get('wrong', [])); ok ? wrong.delete(k) : wrong.add(k); store.set('wrong', [...wrong]);
+  const v = Object.values(score);
+  document.getElementById('score').innerHTML = `<small>ถูก ${v.filter(Boolean).length} / ทำแล้ว ${v.length} จาก ${items.length} ข้อ</small>`;
+}
+
+function answer(n) {
+  const q = items[n].q, c = document.getElementById('c' + n);
+  if (q.type === 'mcq') { const r = c.querySelector('input:checked'); return r ? +r.value === q.answer : null; }
+  const v = parseFloat(document.getElementById('t' + n).value.replace(',', ''));
+  return isNaN(v) ? null : Math.abs(v - q.answer) <= q.tol;
+}
+
+function submit() {
+  if (submitted) return; submitted = true; clearInterval(timer);
+  items.forEach((it, n) => { if (it.q.type === 'written') reveal(n); else reveal(n, answer(n) === true); });
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const { act, id, n, v } = b.dataset, N = +n;
+  if (act === 'home') home();
+  else if (act === 'set') start('practice', SETS.find(s => s.id === id).questions.map(q => ({ set: SETS.find(s => s.id === id), q })));
+  else if (act === 'mock') mock();
+  else if (act === 'review') { const w = new Set(store.get('wrong', [])); start('review', SETS.flatMap(s => s.questions.map(q => ({ set: s, q }))).filter(i => w.has(key(i)))); }
+  else if (act === 'check') { const ok = answer(N); if (ok === null) return alert('ยังไม่ได้ตอบ'); reveal(N, ok); }
+  else if (act === 'show') reveal(N);
+  else if (act === 'self') { record(N, v === '1'); b.parentElement.querySelectorAll('button').forEach(x => x.disabled = true); }
+  else if (act === 'submit') submit();
+});
+home();
+</script>
+</body>
+</html>
