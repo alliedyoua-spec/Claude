@@ -12,12 +12,6 @@
         "repo": "DietrichGebert/ponytail"
       }
     },
-    "karpathy-skills": {
-      "source": {
-        "source": "github",
-        "repo": "multica-ai/andrej-karpathy-skills"
-      }
-    },
     "thedotmack": {
       "source": {
         "source": "github",
@@ -34,8 +28,47 @@
   "enabledPlugins": {
     "superpowers@superpowers-dev": true,
     "ponytail@ponytail": true,
-    "andrej-karpathy-skills@karpathy-skills": true,
     "claude-mem@thedotmack": true,
     "caveman@caveman": true
+  },
+  "env": {
+    "PONYTAIL_DEFAULT_MODE": "full",
+    "PONYTAIL_QUIET_STARTUP": "1",
+    "CAVEMAN_DEFAULT_MODE": "lite"
+  },
+  "permissions": {
+    "deny": [
+      "Skill(make-plan)",
+      "Skill(do)",
+      "Skill(claude-mem:make-plan)",
+      "Skill(claude-mem:do)",
+      "Skill(version-bump)",
+      "Skill(wowerpoint)",
+      "Skill(oh-my-issues)",
+      "Skill(weekly-digests)",
+      "Skill(timeline-report)",
+      "Skill(design-is)",
+      "Skill(pathfinder)",
+      "Skill(standup)",
+      "Skill(what-the)",
+      "Skill(agent-cost-report)",
+      "Skill(ccs-align)",
+      "Skill(cloud-sync)",
+      "Skill(mem-setup)",
+      "Skill(mode-creator)",
+      "Skill(caveman:investigate-first)",
+      "Skill(caveman:verify-and-stop)",
+      "Skill(caveman:lean-build)",
+      "Skill(caveman:safe-refactor)",
+      "Skill(caveman:surgical-patch)",
+      "Skill(caveman:caveman-review)",
+      "Skill(caveman:migration)",
+      "Skill(caveman:caveman-setup)",
+      "Skill(caveman:caveman-discover)",
+      "Skill(caveman:caveman-evidence-review)",
+      "Skill(caveman:caveman-manage)",
+      "Skill(caveman:caveman-optimize)",
+      "Skill(caveman:caveman-learn)"
+    ]
   }
 }
