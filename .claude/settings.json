@@ -34,7 +34,7 @@
   "env": {
     "PONYTAIL_DEFAULT_MODE": "full",
     "PONYTAIL_QUIET_STARTUP": "1",
-    "CAVEMAN_DEFAULT_MODE": "lite"
+    "CAVEMAN_DEFAULT_MODE": "caveman"
   },
   "permissions": {
     "deny": [
