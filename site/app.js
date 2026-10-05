@@ -79,7 +79,8 @@ function graphWidget(it, n, v, ro) {
   const g = it.q.graph, ex = GK.expect(g), fields = GK.fields(g, n); v = v || {}; let sec = '';
   const row = ([f, label, opts, s]) => { const h = s !== sec ? `<div class="gws">${esc(s)}</div>` : ''; sec = s;
     return h + `<label for="g${n}${f}">${label}</label><div class="row"><select id="g${n}${f}" data-g="${esc(key(it))}" data-f="${f}" data-n="${n}" ${ro ? 'disabled' : ''}><option value="">เลือก</option>${opts.map(([x, t]) => `<option value="${x}" ${v[f] === x ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>${ro ? (v[f] === ex[f] ? '<span class="pill ok">ถูก</span>' : `<span class="pill bad">เฉลย: ${esc(opts.find(o => o[0] === ex[f])[1])}</span>`) : ''}</div>`; };
-  return `<div class="gw"><div><b>วาดกราฟและวิเคราะห์ทีละขั้น</b> <small class="muted">${ro ? 'คำตอบของคุณ เทียบเฉลย' : 'เลือกคำตอบ กราฟจะเปลี่ยนตามที่เลือก'}</small></div><div class="gwgrid"><div class="gwf">${fields.map(row).join('')}</div><div class="gwv" id="gv${n}">${GK.draw(g, v)}</div></div></div>`;
+  const assume = g.type === 'fx' ? 'สมมติฐาน: ปัจจัยอื่นคงที่ (ceteris paribus) ผลต่อ NX ใช้ผลโดยตรงตามตารางสไลด์ Ch.13 แล้วต่อเข้า AD-AS โดยเริ่มจากดุลยภาพระยะยาว' : 'สมมติฐาน: เริ่มจากดุลยภาพระยะยาว (E₁) และ SRAS แนวนอน (ระยะสั้นราคาคงที่) ตามสไลด์ Ch.9';
+  return `<div class="gw"><div><b>วาดกราฟและวิเคราะห์ทีละขั้น</b> <small class="muted">${ro ? 'คำตอบของคุณ เทียบเฉลย' : 'เลือกคำตอบ กราฟจะเปลี่ยนตามที่เลือก'}</small><div class="gwa"><small class="muted">${assume}</small></div></div><div class="gwgrid"><div class="gwf">${fields.map(row).join('')}</div><div class="gwv" id="gv${n}">${GK.draw(g, v)}</div></div></div>`;
 }
 const qGraph = it => it.q.type === 'mcq' && it.q.graph ? window.graphSvg(it.q.graph) : '';
 function inputHtml(it, n, val, perm) {
